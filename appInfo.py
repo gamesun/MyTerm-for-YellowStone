@@ -34,7 +34,7 @@
 title = 'MyTerm for YellowStone'
 version = '1.0'
 file_name = title + ' ' + version
-url = 'https://github.com/gamesun/MyTerm#myterm'
+url = 'https://github.com/gamesun/MyTerm-for-YellowStone#myterm-for-yellowstone'
 author = 'gamesun'
-copyright = 'Copyright (c) 2013, gamesun'
+copyright = 'Copyright (C) 2013, gamesun'
 
