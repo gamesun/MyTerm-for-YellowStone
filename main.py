@@ -178,7 +178,7 @@ class MyApp(wx.App):
         
         self.frame.SplitterWindow.SetSashSize(0)
         self.frame.SplitterWindow.SetSashPosition(SASHPOSITION, True)
-        
+        self.frame.chkRemoveSpace.SetValue(True)
 #         self.frame.choicePort.AppendItems(('COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8'))
 
         self.OnEnumPorts()
@@ -296,6 +296,8 @@ class MyApp(wx.App):
             
             w = self.GetColW()
             txt = self.frame.txtctlMain.GetValue()
+            if self.frame.chkRemoveSpace.IsChecked():
+                txt = txt.replace(' ', '')
             l = [ txt[i:i+w] for i in range(0, len(txt), w)]
             result = '\n'.join(l)
 
