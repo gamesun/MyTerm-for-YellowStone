@@ -47,8 +47,8 @@ from cStringIO import StringIO
 import webbrowser
 import appInfo
 import glob
-import subprocess
-        
+# import subprocess
+
 MAINMENU  = 0
 SUBMENU   = 1
 MENUITEM  = 2
@@ -157,6 +157,8 @@ MAINMENU,
 
 regex_matchPort = re.compile('COM(?P<port>\d+)')
 
+regex_matchComment = re.compile('//.*')
+regex_matchDigit = re.compile('[0-9a-fA-F]')
 
 serialport = serial.Serial()
 
@@ -195,6 +197,9 @@ class MyApp(wx.App):
         
         self.frame.txtctlColW.SetValue('%d' % self.colW)
         
+        self.YSScriptTxt = ''
+        
+        
         # Make a menu
         menuBar = wx.MenuBar()
         self.MakeMenu(menuBar, MenuDefs)
@@ -218,6 +223,8 @@ class MyApp(wx.App):
         self.frame.btnYSTransmit.Bind(wx.EVT_BUTTON, self.OnYSTransmit)
 #         self.frame.btnSetColW.Bind(wx.EVT_BUTTON, self.OnBtnSetColW)
 #         self.frame.chkColW.Bind(wx.EVT_CHECKBOX, self.OnChkColW)
+        self.frame.btnSelectScript.Bind(wx.EVT_BUTTON, self.OnBtnSelectScript)
+        self.frame.btnTransmitScript.Bind(wx.EVT_BUTTON, self.OnBtnTransmitScript)
         
         self.SetTopWindow(self.frame)
         self.frame.SetTitle( appInfo.title )
@@ -237,6 +244,44 @@ class MyApp(wx.App):
 #         if int(self.colW) < 1:
 #             self.colW = 1
 #             self.frame.txtctlColW.SetValue('%d' % self.colW)
+    
+    def OnBtnTransmitScript(self, evt = None):
+        txt = self.YSScriptTxt
+        draft = regex_matchComment.sub('', txt)
+        s = regex_matchDigit.findall(draft)
+        dat = ''.join(s)
+        [ self.SerialWrite(int(dat[i:i+2], 16)) for i in range(0, len(dat), 2)]
+        
+        
+    def SerialWrite(self, srcData):
+        if serialport.isOpen() and srcData < 256:
+            try:
+                serialport.write(chr(srcData))
+            except serial.SerialException, e:
+                evt = SerialExceptEvent(self.frame.GetId(), e)
+                self.frame.GetEventHandler().AddPendingEvent(evt)
+            else:
+                self.txCount += 1
+                self.frame.statusbar.SetStatusText('Tx:%d' % self.txCount, 2)
+        
+    def OnBtnSelectScript(self, evt = None):
+        dlg = wx.FileDialog(self.frame,
+                            message="Select the Script file to transmit",
+                            defaultDir = os.getcwd(),
+                            wildcard = "All Files|*.*",
+                            style = wx.OPEN | wx.CHANGE_DIR)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            filepath = dlg.GetPath()
+            self.frame.txtScriptDir.SetValue(filepath)
+        dlg.Destroy()
+    
+        f = open(filepath, 'r')
+        
+        self.YSScriptTxt = f.read()
+        print self.YSScriptTxt
+        
+        f.close()
     
     def GetColW(self):
         colW = self.frame.txtctlColW.GetValue()
