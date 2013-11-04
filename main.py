@@ -48,6 +48,7 @@ import webbrowser
 import appInfo
 import glob
 # import subprocess
+import ConfigParser
 
 MAINMENU  = 0
 SUBMENU   = 1
@@ -123,6 +124,9 @@ def EnumerateSerialPorts():
                 yield '/dev/%s' % r.group('tty') 
 
         
+MENU_ID_RX_ASCII = wx.NewId()
+MENU_ID_RX_HEX_L = wx.NewId()
+MENU_ID_RX_HEX_U = wx.NewId()
             
 MenuDefs = (
 MAINMENU,
@@ -140,9 +144,9 @@ MAINMENU,
     (CHECKITEM, wx.NewId(), '&Always on top',     'always on most top',  'self.OnAlwayOnTop'     ),
     (CHECKITEM, wx.NewId(), '&Local echo',        'echo what you typed', 'self.OnLocalEcho'      ),
     (SUBMENU, '&Rx view as', (
-        (RADIOITEM, wx.NewId(), '&Ascii', '', 'self.OnRxAsciiMode' ),
-        (RADIOITEM, wx.NewId(), '&hex(lowercase)',   '', 'self.OnRxHexModeLowercase'   ),
-        (RADIOITEM, wx.NewId(), '&HEX(UPPERCASE)',   '', 'self.OnRxHexModeUppercase'   ),
+        (RADIOITEM, MENU_ID_RX_ASCII, '&Ascii', '', 'self.OnRxAsciiMode' ),
+        (RADIOITEM, MENU_ID_RX_HEX_L, '&hex(lowercase)',   '', 'self.OnRxHexModeLowercase'   ),
+        (RADIOITEM, MENU_ID_RX_HEX_U, '&HEX(UPPERCASE)',   '', 'self.OnRxHexModeUppercase'   ),
     )),
 #     (SUBMENU, 'Tx view as', (
 #         (RADIOITEM, wx.NewId(), 'ASCII', '', 'self.OnTxAsciiMode' ),
@@ -185,9 +189,15 @@ class MyApp(wx.App):
 
         self.OnEnumPorts()
 
-        # initial variables
+        # Make a menu
+        self.menuBar = wx.MenuBar()
+        self.MakeMenu(self.menuBar, MenuDefs)
+        self.frame.SetMenuBar(self.menuBar)
         
-        self.rxmode = ASCII
+        # initial variables
+        self.config = ConfigParser.RawConfigParser()
+        self.LoadSettings()
+        
         self.txmode = ASCII
         self.localEcho = False
         self.rxCount = 0
@@ -199,11 +209,6 @@ class MyApp(wx.App):
         
         self.YSScriptTxt = ''
         
-        
-        # Make a menu
-        menuBar = wx.MenuBar()
-        self.MakeMenu(menuBar, MenuDefs)
-        self.frame.SetMenuBar(menuBar)
         
         # bind events
         self.frame.btnHideBar.Bind(wx.EVT_BUTTON, self.OnHideSettingBar)
@@ -221,8 +226,6 @@ class MyApp(wx.App):
         self.frame.txtctlMain.Bind(wx.EVT_TEXT_URL, self.OnURL)
 
         self.frame.btnYSTransmit.Bind(wx.EVT_BUTTON, self.OnYSTransmit)
-#         self.frame.btnSetColW.Bind(wx.EVT_BUTTON, self.OnBtnSetColW)
-#         self.frame.chkColW.Bind(wx.EVT_CHECKBOX, self.OnChkColW)
         self.frame.btnSelectScript.Bind(wx.EVT_BUTTON, self.OnBtnSelectScript)
         self.frame.btnTransmitScript.Bind(wx.EVT_BUTTON, self.OnBtnTransmitScript)
         
@@ -236,15 +239,32 @@ class MyApp(wx.App):
         
         return True
 
-#     def OnChkColW(self, evt = None):
-#         self.chkColW = self.frame.chkColW.IsChecked()
-# 
-#     def OnBtnSetColW(self, evt = None):
-#         self.colW = int(self.frame.txtctlColW.GetValue())
-#         if int(self.colW) < 1:
-#             self.colW = 1
-#             self.frame.txtctlColW.SetValue('%d' % self.colW)
     
+    def LoadSettings(self):
+        self.config.read('setting.ini')
+
+        {'ASCII':  self.OnRxAsciiMode,
+         'hex':    self.OnRxHexModeLowercase,
+         'HEX':    self.OnRxHexModeUppercase,
+         }[self.config.get('display', 'rx_view_as')]()
+        
+        self.menuBar.Check({ASCII:           MENU_ID_RX_ASCII,
+                            HEX_LOWERCASE:   MENU_ID_RX_HEX_L,
+                            HEX_UPPERCASE:   MENU_ID_RX_HEX_U,
+                            }.get(self.rxmode),
+                           True)
+        
+    def SaveSettings(self):
+        self.config.set('display', 'rx_view_as', 
+                        {ASCII:        'ASCII',
+                         HEX_LOWERCASE:'hex',
+                         HEX_UPPERCASE:'HEX',
+                         }.get(self.rxmode)
+                        )
+        
+        with open('setting.ini', 'w') as configfile:
+            self.config.write(configfile)
+        
     def OnBtnTransmitScript(self, evt = None):
         txt = self.YSScriptTxt
         draft = regex_matchComment.sub('', txt)
@@ -681,6 +701,8 @@ class MyApp(wx.App):
         print 'exit'
     
     def Cleanup(self, evt = None):
+        self.SaveSettings()
+        
         self.frame.Destroy()
         self.OnClosePort()
 #         for t in threading.enumerate():
