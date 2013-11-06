@@ -203,10 +203,6 @@ class MyApp(wx.App):
         self.localEcho = False
         self.rxCount = 0
         self.txCount = 0
-        self.colW = 20
-        self.chkColW = False
-        
-        self.frame.txtctlColW.SetValue('%d' % self.colW)
         
         self.YSScriptTxt = ''
         
@@ -273,6 +269,16 @@ class MyApp(wx.App):
                                 HEX_UPPERCASE:   MENU_ID_RX_HEX_U,
                                 }.get(self.rxmode),
                                True)
+        
+        if self.config.has_section('YellowStone'):
+            if self.config.has_option('YellowStone', 'columns_width'):
+                self.frame.txtctlColW.SetValue(self.config.get('YellowStone', 'columns_width'))
+            
+            if self.config.has_option('YellowStone', 'remove_spaces'):
+                if self.config.get('YellowStone', 'remove_spaces') == 'on':
+                    self.frame.chkRemoveSpace.SetValue(True)
+                else:
+                    self.frame.chkRemoveSpace.SetValue(False)
     
     def SaveSettings(self):
         if not self.config.has_section('serial'):
@@ -299,6 +305,12 @@ class MyApp(wx.App):
                          }.get(self.rxmode)
                         )
         
+        if not self.config.has_section('YellowStone'):
+            self.config.add_section('YellowStone')
+            
+        self.config.set('YellowStone', 'columns_width', self.frame.txtctlColW.GetValue())
+        self.config.set('YellowStone', 'remove_spaces',
+                        self.frame.chkRemoveSpace.IsChecked() and 'on' or 'off')
         
         with open('setting.ini', 'w') as configfile:
             self.config.write(configfile)
