@@ -198,6 +198,7 @@ class MyApp(wx.App):
         self.config = ConfigParser.RawConfigParser()
         self.LoadSettings()
         
+        self.rxmode = ASCII
         self.txmode = ASCII
         self.localEcho = False
         self.rxCount = 0
@@ -242,19 +243,24 @@ class MyApp(wx.App):
     
     def LoadSettings(self):
         self.config.read('setting.ini')
-
-        {'ASCII':  self.OnRxAsciiMode,
-         'hex':    self.OnRxHexModeLowercase,
-         'HEX':    self.OnRxHexModeUppercase,
-         }[self.config.get('display', 'rx_view_as')]()
         
-        self.menuBar.Check({ASCII:           MENU_ID_RX_ASCII,
-                            HEX_LOWERCASE:   MENU_ID_RX_HEX_L,
-                            HEX_UPPERCASE:   MENU_ID_RX_HEX_U,
-                            }.get(self.rxmode),
-                           True)
-        
+        if self.config.has_section('display'):
+            {'ASCII':  self.OnRxAsciiMode,
+             'hex':    self.OnRxHexModeLowercase,
+             'HEX':    self.OnRxHexModeUppercase,
+             }[self.config.get('display', 'rx_view_as')]()
+            
+            self.menuBar.Check({ASCII:           MENU_ID_RX_ASCII,
+                                HEX_LOWERCASE:   MENU_ID_RX_HEX_L,
+                                HEX_UPPERCASE:   MENU_ID_RX_HEX_U,
+                                }.get(self.rxmode),
+                               True)
+            
+    
     def SaveSettings(self):
+        if not self.config.has_section('display'):
+            self.config.add_section('display')
+        
         self.config.set('display', 'rx_view_as', 
                         {ASCII:        'ASCII',
                          HEX_LOWERCASE:'hex',
@@ -262,9 +268,10 @@ class MyApp(wx.App):
                          }.get(self.rxmode)
                         )
         
+        
         with open('setting.ini', 'w') as configfile:
             self.config.write(configfile)
-        
+    
     def OnBtnTransmitScript(self, evt = None):
         txt = self.YSScriptTxt
         draft = regex_matchComment.sub('', txt)
