@@ -409,13 +409,17 @@ class MyApp(wx.App):
             
             f = open(path, 'w')
             
-            w = self.GetColW()
             txt = self.frame.txtctlMain.GetValue()
-            if self.frame.chkRemoveSpace.IsChecked():
-                txt = txt.replace(' ', '')
-            l = [ txt[i:i+w] for i in range(0, len(txt), w)]
-            result = '\n'.join(l)
-
+            
+            w = self.GetColW()
+            if w is not None:
+                if self.frame.chkRemoveSpace.IsChecked():
+                    txt = txt.replace(' ', '')
+                l = [ txt[i:i+w] for i in range(0, len(txt), w)]
+                result = '\n'.join(l)
+            else:
+                result = txt
+                
             f.write(result)
             
             f.close()
