@@ -244,6 +244,24 @@ class MyApp(wx.App):
     def LoadSettings(self):
         self.config.read('setting.ini')
         
+        if self.config.has_section('serial'):
+            self.frame.choicePort.SetStringSelection(self.config.get('serial', 'port'))
+            self.frame.cmbBaudRate.SetStringSelection(self.config.get('serial', 'baudrate'))
+            self.frame.choiceDataBits.SetStringSelection(self.config.get('serial', 'databits'))
+            self.frame.choiceParity.SetStringSelection(self.config.get('serial', 'parity'))
+            self.frame.choiceStopBits.SetStringSelection(self.config.get('serial', 'stopbits'))
+            
+            if self.config.get('serial', 'rtscts') == 'on':
+                self.frame.chkboxrtscts.SetValue(True)
+            else:
+                self.frame.chkboxrtscts.SetValue(False)
+            
+            if self.config.get('serial', 'xonxoff') == 'on':
+                self.frame.chkboxxonxoff.SetValue(True)
+            else:
+                self.frame.chkboxxonxoff.SetValue(False)
+            
+        
         if self.config.has_section('display'):
             {'ASCII':  self.OnRxAsciiMode,
              'hex':    self.OnRxHexModeLowercase,
@@ -255,9 +273,22 @@ class MyApp(wx.App):
                                 HEX_UPPERCASE:   MENU_ID_RX_HEX_U,
                                 }.get(self.rxmode),
                                True)
-            
     
     def SaveSettings(self):
+        if not self.config.has_section('serial'):
+            self.config.add_section('serial')
+        
+        self.config.set('serial', 'port',       str(self.frame.choicePort.GetStringSelection()))
+        self.config.set('serial', 'baudrate',   str(self.frame.cmbBaudRate.GetStringSelection()))
+        self.config.set('serial', 'databits',   str(self.frame.choiceDataBits.GetStringSelection()))
+        self.config.set('serial', 'parity',     str(self.frame.choiceParity.GetStringSelection()))
+        self.config.set('serial', 'stopbits',   str(self.frame.choiceStopBits.GetStringSelection()))
+        self.config.set('serial', 'rtscts',
+                        self.frame.chkboxrtscts.IsChecked() and 'on' or 'off' )
+        self.config.set('serial', 'xonxoff',
+                        self.frame.chkboxxonxoff.IsChecked() and 'on' or 'off' )
+        
+        
         if not self.config.has_section('display'):
             self.config.add_section('display')
         
