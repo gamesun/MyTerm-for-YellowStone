@@ -735,11 +735,16 @@ class MyApp(wx.App):
         info.Version = appInfo.version
         info.Copyright = appInfo.copyright
         info.Description = wordwrap(
-            '\nMyTerm is a RS232 serial port communication utility that can '
-            'display the received data either in hexadecimal or ASCII format, '
-            'allowing you to configure the connection parameters.'
-            '\n\nIts other features including detecting the valid serial '
-            'ports, echoing the sending data in local or not.',
+            '\nMyTerm is a RS232 serial port communication utility.'
+            
+            '\n\nAiming at debugging easily, We added some special '
+            'functions to "MyTerm for-YellowStone":'
+            '\n >Transmit data as hexadecimal.'
+            '\n >Set columns width when save log to a file'
+            '\n >Read data from scripts and transmit them'
+            '\n\nSpecial Thanks to Xiuru Chen. He has helped '
+            'me fix many bugs and given many suggestions.'
+            ,
             335, wx.ClientDC(self.frame))
         info.WebSite = (appInfo.url, "Home Page")
         info.Developers = [ appInfo.author ]
