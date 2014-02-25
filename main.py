@@ -50,6 +50,9 @@ import glob
 # import subprocess
 import ConfigParser
 
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 MAINMENU  = 0
 SUBMENU   = 1
 MENUITEM  = 2
@@ -312,7 +315,7 @@ class MyApp(wx.App):
         self.config.set('YellowStone', 'remove_spaces',
                         self.frame.chkRemoveSpace.IsChecked() and 'on' or 'off')
         
-        with open('setting.ini', 'w') as configfile:
+        with open("%s\\setting.ini" % os.path.dirname(os.path.realpath(__file__)), 'w') as configfile:
             self.config.write(configfile)
     
     def OnBtnTransmitScript(self, evt = None):
